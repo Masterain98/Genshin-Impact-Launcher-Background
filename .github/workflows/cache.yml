@@ -32,5 +32,5 @@ jobs:
           branch: main
           create_branch: true
           commit_options: '--no-verify --signoff'
-          file_pattern: 'Output/*'
+          file_pattern: '.'
           repository: .
