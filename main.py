@@ -74,12 +74,86 @@ def get_os_sg_cloud():
             f.write(httpx.get(background_url).content)
 
 
+def try_all_resolution():
+    import multiprocessing
+    import threading
+    import json
+
+    client = httpx.Client(headers={"x-rpc-cg_game_biz": "hk4e_global"})
+    background_url_list = []
+    log = open("log.txt", "w")
+
+    def process_resolution(i, j):
+        url = "https://sg-cg-api.hoyoverse.com/hk4e_global/cg/gamer/api/getUIConfig?height=%s&width=%s" % (i, j)
+        response = client.get(url).json()
+        background_url = response["data"]["bg_image"]["url"]
+        print(f"Resolution: {i}x{j}, URL: {background_url}")
+        log.write(f"Resolution: {i}x{j}, URL: {background_url}\n")
+        background_url_list.append(background_url)
+
+    num_cores = multiprocessing.cpu_count()
+    threads = []
+    for i in range(1, 3840, 10):
+        for j in range(1, 2160, 10):
+            if len(threads) >= num_cores:
+                for thread in threads:
+                    thread.join()
+                del threads[:]
+            thread = threading.Thread(target=process_resolution, args=(i, j))
+            thread.start()
+            threads.append(thread)
+
+    for thread in threads:
+        thread.join()
+
+    client.close()
+    log.close()
+    background_url_list = list(set(background_url_list))
+    with open("background_url_list.json", "w") as f:
+        json.dump(background_url_list, f)
+
+
+def mys_wallpaper():
+    api_url = ("https://hk4e-api.mihoyo.com/event/contenthub/v1/wall_papers?page={page_number}&size=100&type={type}&ba"
+               "dge_uid=100000000&badge_region=cn_qd01&game_biz=hk4e_cn&lang=zh-cn")
+    wallpaper_type_list = [
+        {"type": "0", "name": "Patch Wallpapers"},
+        {"type": "1", "name": "Event Wallpapers"},
+        {"type": "2", "name": "Character Wallpapers"},
+    ]
+    for w in wallpaper_type_list:
+        page_number = 1
+        while True:
+            print(f"Downloading {w['name']} at page {page_number}...")
+            this_url = api_url.format(page_number=page_number, type=w["type"])
+            print(f"URL: {this_url}")
+            try:
+                response = httpx.get(this_url).json()
+            except UnicodeDecodeError:
+                break
+            for wallpaper in response["data"]["wallpapers"]:
+                wallpaper_title = wallpaper["title"]
+                wallpaper_url_list = list([pic["url"] for pic in wallpaper["pic_list"]])
+                for url in wallpaper_url_list:
+                    file_name, day, month, year = url_process(url)
+                    os.makedirs(f"./output/mys/{w['name']}/{wallpaper_title}/{year}/{month}/{day}/", exist_ok=True)
+                    with open(f"./output/mys/{w['name']}/{wallpaper_title}/{year}/{month}/{day}/{file_name}",
+                              "wb") as f:
+                        f.write(httpx.get(url).content)
+            if not response["data"]["has_more"]:
+                break
+            else:
+                page_number += 1
+
+
 def main():
     get_cn_background()
     get_bilibili_background()
     get_os_background()
     get_cn_cloud()
     get_os_sg_cloud()
+    # try_all_resolution()
+    mys_wallpaper()
 
 
 if __name__ == "__main__":
