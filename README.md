@@ -1,5 +1,5 @@
 # Genshin-Impact-Launcher-Background
- 
+
 Genshin Impact launcher background image auto archive.
 
 Including launcher of
@@ -8,3 +8,7 @@ Including launcher of
 - Oversea server
 - CN cloud gaming server
 - Singapore cloud gaming server
+
+Also includes
+
+- Wallpaper from Chinese MiHoYo BBS (aka. MiYouShe)
