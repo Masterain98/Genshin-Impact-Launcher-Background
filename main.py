@@ -2,6 +2,7 @@ import httpx
 import os
 
 RESOLUTION_SET = [[1440, 3120], [1, 1], [1152, 2048]]
+RETRY_TIMES = 3
 
 
 def url_process(url: str) -> tuple:
@@ -10,9 +11,19 @@ def url_process(url: str) -> tuple:
 
 
 def get_cn_background():
+    error_message = ""
     url = ("https://sdk-static.mihoyo.com/hk4e_cn/mdk/launcher/api/content?filter_adv=true&key=eYd89JmJ&language=zh-cn"
            "&launcher_id=18")
-    response = httpx.get(url).json()
+    for _ in range(RETRY_TIMES):
+        try:
+            response = httpx.get(url, timeout=15).json()
+            break
+        except (httpx.ReadTimeout, httpx.RemoteProtocolError, httpx.ConnectTimeout) as e:
+            error_message += f"```{str(e)}```\n"
+            continue
+    else:
+        print(f"::error title=Failed to cache CN background::{error_message}")
+        return None
     background_url = response["data"]["adv"]["background"]
     file_name, day, month, year = url_process(background_url)
     os.makedirs(f"./output/cn/{year}/{month}/{day}/", exist_ok=True)
@@ -114,6 +125,8 @@ def try_all_resolution():
 
 
 def mys_wallpaper():
+    print("::group::Checking MYS wallpaper")
+    error_message = ""
     api_url = ("https://hk4e-api.mihoyo.com/event/contenthub/v1/wall_papers?page={page_number}&size=100&type={type}&ba"
                "dge_uid=100000000&badge_region=cn_qd01&game_biz=hk4e_cn&lang=zh-cn")
     wallpaper_type_list = [
@@ -137,13 +150,28 @@ def mys_wallpaper():
                 for url in wallpaper_url_list:
                     file_name, day, month, year = url_process(url)
                     os.makedirs(f"./output/mys/{w['name']}/{wallpaper_title}/{year}/{month}/{day}/", exist_ok=True)
+                    # check if file exists
+                    if os.path.exists(f"./output/mys/{w['name']}/{wallpaper_title}/{year}/{month}/{day}/{file_name}"):
+                        continue
                     with open(f"./output/mys/{w['name']}/{wallpaper_title}/{year}/{month}/{day}/{file_name}",
                               "wb") as f:
-                        f.write(httpx.get(url).content)
+                        print(f"Downloading {w['name']}/{wallpaper_title}/{year}/{month}/{day}/{file_name}...")
+                        for _ in range(RETRY_TIMES):
+                            try:
+                                conn = httpx.get(url)
+                                break
+                            except (httpx.ReadTimeout, httpx.RemoteProtocolError, httpx.ConnectTimeout) as e:
+                                error_message += f"```{str(e)}```\n"
+                                continue
+                        else:
+                            print(f"::error title=Failed to cache MYS wallpaper::{error_message}")
+                            return None
+                        f.write(conn.content)
             if not response["data"]["has_more"]:
                 break
             else:
                 page_number += 1
+    print("::endgroup::")
 
 
 def main():
