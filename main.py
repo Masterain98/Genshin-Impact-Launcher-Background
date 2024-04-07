@@ -1,7 +1,7 @@
 import httpx
 import os
 
-resolution_set = [[1440, 3120], [1, 1], [1152, 2048]]
+RESOLUTION_SET = [[1440, 3120], [1, 1], [1152, 2048]]
 
 
 def url_process(url: str) -> tuple:
@@ -50,7 +50,7 @@ def get_os_background():
 
 
 def get_cn_cloud():
-    for r in resolution_set:
+    for r in RESOLUTION_SET:
         url = "https://api-cloudgame.mihoyo.com/hk4e_cg_cn/gamer/api/getUIConfig?height=%s&width=%s" % (r[0], r[1])
         response = httpx.get(url).json()
         background_url = response["data"]["bg_image"]["url"]
@@ -61,7 +61,7 @@ def get_cn_cloud():
 
 
 def get_os_sg_cloud():
-    for r in resolution_set:
+    for r in RESOLUTION_SET:
         url = "https://sg-cg-api.hoyoverse.com/hk4e_global/cg/gamer/api/getUIConfig?height=%s&width=%s" % (r[0], r[1])
         headers = {
             "x-rpc-cg_game_biz": "hk4e_global",
@@ -83,12 +83,12 @@ def try_all_resolution():
     background_url_list = []
     log = open("log.txt", "w")
 
-    def process_resolution(i, j):
-        url = "https://sg-cg-api.hoyoverse.com/hk4e_global/cg/gamer/api/getUIConfig?height=%s&width=%s" % (i, j)
+    def process_resolution(x, y):
+        url = "https://sg-cg-api.hoyoverse.com/hk4e_global/cg/gamer/api/getUIConfig?height=%s&width=%s" % (x, y)
         response = client.get(url).json()
         background_url = response["data"]["bg_image"]["url"]
-        print(f"Resolution: {i}x{j}, URL: {background_url}")
-        log.write(f"Resolution: {i}x{j}, URL: {background_url}\n")
+        print(f"Resolution: {x}x{y}, URL: {background_url}")
+        log.write(f"Resolution: {x}x{y}, URL: {background_url}\n")
         background_url_list.append(background_url)
 
     num_cores = multiprocessing.cpu_count()
