@@ -32,9 +32,20 @@ def get_cn_background():
 
 
 def get_bilibili_background():
+    error_message = ""
     url = ("https://sdk-static.mihoyo.com/hk4e_cn/mdk/launcher/api/content?filter_adv=true&key=KAtdSsoQ&language=zh-cn"
            "&launcher_id=17")
-    response = httpx.get(url).json()
+    for _ in range(RETRY_TIMES):
+        try:
+            response = httpx.get(url)
+            break
+        except (httpx.ReadTimeout, httpx.RemoteProtocolError, httpx.ConnectTimeout) as e:
+            error_message += f"```{str(e)}```\n"
+            continue
+    else:
+        print(f"::error title=Failed to cache MYS wallpaper::{error_message}")
+        return None
+    response = response.json()
     background_url = response["data"]["adv"]["background"]
     file_name, day, month, year = url_process(background_url)
     os.makedirs(f"./output/bilibili/{year}/{month}/{day}/", exist_ok=True)
