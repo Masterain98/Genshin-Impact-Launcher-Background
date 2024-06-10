@@ -185,6 +185,36 @@ def mys_wallpaper():
     print("::endgroup::")
 
 
+def get_hoyoplay_cn_pure():
+    data = httpx.get(
+        "https://hyp-api.mihoyo.com/hyp/hyp-connect/api/getGames?launcher_id=jGHBHlcOq1&language=zh-cn").json()
+    data = data["data"]["games"]
+    for game in data:
+        if game["biz"] == "hk4e_cn":
+            background_url = game["display"]["background"]["url"]
+            file_name, day, month, year = url_process(background_url)
+            os.makedirs(f"./output/hoyoplay_cn_pure/{year}/{month}/{day}/", exist_ok=True)
+            with open(f"./output/hoyoplay_cn_pure/{year}/{month}/{day}/{file_name}", "wb") as f:
+                f.write(httpx.get(background_url).content)
+            break
+
+
+def get_hoyoplay_cn_text():
+    data = httpx.get(
+        "https://hyp-api.mihoyo.com/hyp/hyp-connect/api/getAllGameBasicInfo?launcher_id=jGHBHlcOq1&language=zh-cn&game_id=").json()
+    data = data["data"]["game_info_list"]
+    for game in data:
+        if game["game"]["biz"] == "hk4e_cn":
+            background_list = game["backgrounds"]
+            for bg in background_list:
+                background_url = bg["background"]["url"]
+                file_name, day, month, year = url_process(background_url)
+                os.makedirs(f"./output/hoyoplay_cn_text/{year}/{month}/{day}/", exist_ok=True)
+                with open(f"./output/hoyoplay_cn_text/{year}/{month}/{day}/{file_name}", "wb") as f:
+                    f.write(httpx.get(background_url).content)
+            break
+
+
 def main():
     get_cn_background()
     get_bilibili_background()
@@ -193,6 +223,8 @@ def main():
     get_os_sg_cloud()
     # try_all_resolution()
     mys_wallpaper()
+    get_hoyoplay_cn_pure()
+    get_hoyoplay_cn_text()
 
 
 if __name__ == "__main__":
