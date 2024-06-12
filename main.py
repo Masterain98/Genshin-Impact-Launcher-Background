@@ -215,6 +215,39 @@ def get_hoyoplay_cn_text():
             break
 
 
+def get_hoyoplay_global_pure():
+    data = httpx.get(
+        "https://sg-hyp-api.hoyoverse.com/hyp/hyp-connect/api/getGames?launcher_id=VYTpXlbWo8&language=zh-cn").json()
+    data = data["data"]["games"]
+    for game in data:
+        if game["biz"] == "hk4e_global":
+            background_url = game["display"]["background"]["url"]
+            file_name, day, month, year = url_process(background_url)
+            os.makedirs(f"./output/hoyoplay_global_pure/{year}/{month}/{day}/", exist_ok=True)
+            with open(f"./output/hoyoplay_global_pure/{year}/{month}/{day}/{file_name}", "wb") as f:
+                f.write(httpx.get(background_url).content)
+            break
+
+
+def get_hoyoplay_global_text():
+    language_set = ["zh-cn", "zh-tw", "en-us", "ja-jp", "ko-kr", "fr-fr", "de-de", "es-es", "pt-pt", "ru-ru",
+                    "id-id", "vi-vn", "th-th"]
+    for language in language_set:
+        data = httpx.get(
+            f"https://sg-hyp-api.hoyoverse.com/hyp/hyp-connect/api/getAllGameBasicInfo?launcher_id=VYTpXlbWo8&language={language}&game_id=gopR6Cufr3").json()
+        data = data["data"]["game_info_list"]
+        for game in data:
+            if game["game"]["biz"] == "hk4e_global":
+                background_list = game["backgrounds"]
+                for bg in background_list:
+                    background_url = bg["background"]["url"]
+                    file_name, day, month, year = url_process(background_url)
+                    os.makedirs(f"./output/hoyoplay_global_text/{year}/{month}/{day}/", exist_ok=True)
+                    with open(f"./output/hoyoplay_global_text/{year}/{month}/{day}/{file_name}", "wb") as f:
+                        f.write(httpx.get(background_url).content)
+                break
+
+
 def main():
     get_cn_background()
     get_bilibili_background()
@@ -225,6 +258,8 @@ def main():
     mys_wallpaper()
     get_hoyoplay_cn_pure()
     get_hoyoplay_cn_text()
+    get_hoyoplay_global_pure()
+    get_hoyoplay_global_text()
 
 
 if __name__ == "__main__":
