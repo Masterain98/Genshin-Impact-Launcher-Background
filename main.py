@@ -173,7 +173,7 @@ def get_hoyoplay_global_text():
                     "id-id", "vi-vn", "th-th"]
     for language in language_set:
         data = httpx.get(
-            f"https://sg-hyp-api.hoyoverse.com/hyp/hyp-connect/api/getAllGameBasicInfo?launcher_id=VYTpXlbWo8&language={language}&game_id=gopR6Cufr3").json()
+            f"https://sg-hyp-api.hoyoverse.com/hyp/hyp-connect/api/getAllGameBasicInfo?launcher_id=VYTpXlbWo8&language={language}").json()
         data = data["data"]["game_info_list"]
         for game in data:
             game_biz = game["game"]["biz"]
